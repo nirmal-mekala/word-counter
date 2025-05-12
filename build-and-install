@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+# get the path of the script
+SCRIPT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# get parent directory of the script
+PARENT_DIR="$(dirname "$SCRIPT_PATH")"
+
+# get the path of the user
+USER_PATH="$( cd ~ && pwd )"
+
+# get the path of the user's bin folder
+USER_BIN_PATH="$USER_PATH/bin"
+
+echo "Building…"
+npx webpack
+
+echo "Installing to $USER_BIN_PATH"
+
+if [ ! -d "$USER_BIN_PATH" ]; then
+    mkdir -p "$USER_BIN_PATH"
+fi
+
+if [ -f "$USER_BIN_PATH/plot-csv" ]; then
+    rm "$USER_BIN_PATH/plot-csv"
+fi
+
+(echo "#!/usr/bin/env node"; cat ./dist/bundle.js) > tmp
+chmod u+x tmp
+mv tmp "$USER_BIN_PATH/word-counter"
