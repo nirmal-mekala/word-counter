@@ -25,7 +25,6 @@ coverage
 
 # nyc test coverage
 .nyc_output
-
 # Grunt intermediate storage (https://gruntjs.com/creating-plugins#storing-task-files)
 .grunt
 
@@ -134,3 +133,6 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# build
+dist

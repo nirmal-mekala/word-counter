@@ -4,7 +4,8 @@
   "description": "Meet word count goals with markdown and node",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack"
   },
   "repository": {
     "type": "git",
@@ -20,5 +21,8 @@
     "chalk": "^4.1.2",
     "jsdom": "^26.1.0",
     "yargs": "^17.7.2"
+  },
+  "devDependencies": {
+    "webpack-cli": "^6.0.1"
   }
 }
