@@ -10,6 +10,14 @@ word-counter --path ./path/to/markdown.md --goal 100
 
 ## Deployment
 
+Make sure you install dependencies
+
+```
+npm install
+```
+
+Then…
+
 ```
 ./build-and-install
 ```
