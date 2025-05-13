@@ -14,7 +14,7 @@ function main() {
   let state = { initialWordCount: null, wordCount: null };
   parseMarkdownAndRenderOutput(state, argv);
   fs.watchFile(argv.path, (event, filename) => {
-    parseMarkdownAndRenderOutput(state);
+    parseMarkdownAndRenderOutput(state, argv);
   });
 }
 
