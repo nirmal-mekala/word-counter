@@ -1,30 +1,51 @@
-const jsdom = require('jsdom');
-const { JSDOM } = jsdom;
-const child_process = require('child_process');
-const spawn = child_process.spawn;
+const { JSDOM } = require('jsdom');
+const { spawn, exec } = require('child_process');
 const chalk = require('chalk');
 const yargs = require('yargs');
 const { hideBin } = require('yargs/helpers');
 const fs = require('fs');
 const readline = require('readline');
 
-const argv = args();
 main();
 
 function main() {
+  validatePandocInstall();
+  const argv = parseArgv();
   let initialWordCount;
   let wordCount;
   parseMarkdownAndRenderOutput();
 
-  // TODO break out
-  // TODO error handlin
-  // --> no file
-  // --> no pandoc
+  function parseArgv() {
+    return yargs(hideBin(process.argv))
+      .options({
+        goal: {
+          alias: 'g',
+          describe: '# additional words needed',
+          demandOption: true,
+          type: 'number',
+        },
+        path: {
+          alias: 'p',
+          describe: 'provide a path to file',
+          demandOption: true,
+          type: 'string',
+        },
+      })
+      .check((argv, options) => {
+        if (!fs.existsSync(argv.path)) {
+          throw new Error(`✖ File not found: ${argv.path}`);
+        } else {
+          return true;
+        }
+      })
+      .help()
+      .parse();
+  }
 
   function parseMarkdownAndRenderOutput() {
     pandoc = spawn('pandoc', ['-s', argv.path]);
 
-    // Render "parsing markdown output"
+    // Render "parsing" markdown output
     if (initialWordCount && wordCount) {
       renderOutput(wordCount, initialWordCount, argv.goal, true);
     }
@@ -42,7 +63,7 @@ function main() {
       renderOutput(wordCount, initialWordCount, argv.goal);
     });
     pandoc.stderr.on('data', (data) => {
-      console.log(`stderr: ${data}`);
+      console.error(chalk.red(`pandoc error: ${data}`));
       process.exit(1);
     });
   }
@@ -52,22 +73,13 @@ function main() {
   });
 }
 
-function args() {
-  return yargs(hideBin(process.argv))
-    .options({
-      goal: {
-        alias: 'g',
-        describe: '# additional words needed',
-        demandOption: true,
-      },
-      path: {
-        alias: 'p',
-        describe: 'provide a path to file',
-        demandOption: true,
-      },
-    })
-    .help()
-    .parse();
+function validatePandocInstall() {
+  exec('pandoc --version', (error, stdout, stderr) => {
+    if (error) {
+      console.error(chalk.red('Pandoc is not installed or not in PATH.'));
+      process.exit(1);
+    }
+  });
 }
 
 function renderOutput(
