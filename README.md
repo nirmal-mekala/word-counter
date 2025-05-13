@@ -1,6 +1,6 @@
 # `word-counter`
 
-> Meet word count goals with `pandoc`, markdown, and `node`
+> Meet word count goals with markdown and `node`
 
 ## Usage
 

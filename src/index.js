@@ -6,24 +6,26 @@ const { hideBin } = require('yargs/helpers');
 const fs = require('fs');
 const readline = require('readline');
 
-main();
+(async () => {
+  const [{ default: remarkParse }, { default: remarkHtml }] = await Promise.all(
+    [import('remark-parse'), import('remark-html')],
+  );
+  const { unified } = await import('unified');
+  global.remarkParse = remarkParse;
+  global.remarkHtml = remarkHtml;
+  global.unified = unified;
+  main();
+})().catch((e) => {
+  console.error(chalk.red('Error importing modules:', e));
+  process.exit(1);
+});
 
 function main() {
-  validatePandocInstall();
   const argv = parseArgv();
   let state = { initialWordCount: null, wordCount: null };
   parseMarkdownAndRenderOutput(state, argv);
   fs.watchFile(argv.path, (event, filename) => {
     parseMarkdownAndRenderOutput(state, argv);
-  });
-}
-
-function validatePandocInstall() {
-  exec('pandoc --version', (error, stdout, stderr) => {
-    if (error) {
-      console.error(chalk.red('Pandoc is not installed or not in PATH.'));
-      process.exit(1);
-    }
   });
 }
 
@@ -55,35 +57,26 @@ function parseArgv() {
 }
 
 function parseMarkdownAndRenderOutput(state, argv) {
-  // Spawn pandoc process with provided path
-  pandoc = spawn('pandoc', ['-s', argv.path]);
-
-  // Render "parsing" markdown output
-  if (state.initialWordCount && state.wordCount) {
-    output(state.wordCount, state.initialWordCount, argv.goal, true);
-  }
-  processPandocOutput(pandoc, state, argv);
+  const markdown = fs.readFileSync(argv.path, 'utf8');
+  const html = toHtml(markdown);
+  countHtmlAndUpdateState(html, state);
+  output(state.wordCount, state.initialWordCount, argv.goal);
 }
 
-function processPandocOutput(pandoc, state, argv) {
-  // Process pandoc output and handle errors
-  let chunks = [];
-  pandoc.stdout.on('data', (chunk) => {
-    chunks.push(chunk);
-  });
-  pandoc.stdout.on('end', () => {
-    const html = Buffer.concat(chunks).toString('utf8');
-    // Update state values based on pandoc output
-    state.wordCount = countHTMLWords(html);
-    if (!state.initialWordCount) {
-      state.initialWordCount = state.wordCount;
-    }
-    output(state.wordCount, state.initialWordCount, argv.goal);
-  });
-  pandoc.stderr.on('data', (data) => {
-    console.error(chalk.red(`pandoc error: ${data}`));
-    process.exit(1);
-  });
+function countHtmlAndUpdateState(html, state) {
+  state.wordCount = countHTMLWords(html);
+  if (!state.initialWordCount) {
+    state.initialWordCount = state.wordCount;
+  }
+}
+
+function toHtml(markdown) {
+  const parsedMarkdown = unified()
+    .use(remarkParse)
+    .use(remarkHtml)
+    .processSync(markdown);
+  const html = String(parsedMarkdown);
+  return html;
 }
 
 function countHTMLWords(html) {
@@ -101,7 +94,7 @@ function countWords(str) {
   return matches ? matches.length : 0;
 }
 
-function output(wordCount, originalWordCount, goal, parsingMarkdown = false) {
+function output(wordCount, originalWordCount, goal) {
   readline.cursorTo(process.stdout, 0, 0);
   readline.clearScreenDown(process.stdout);
   const pastGoal = wordCount - originalWordCount >= goal;
@@ -111,10 +104,8 @@ function output(wordCount, originalWordCount, goal, parsingMarkdown = false) {
   const message = pastGoal
     ? chalk.green.inverse('GOAL MET')
     : chalk.red.inverse('KEEP WRITING');
-  const parsingMarkdownMessage = parsingMarkdown ? chalk.cyan('parsing…') : '';
   console.log(`
 
-  ${parsingMarkdownMessage}
   Word Count: ${wordCountString}
   Goal:       ${originalWordCount + goal}
   

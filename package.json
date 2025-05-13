@@ -1,7 +1,7 @@
 {
   "name": "word-counter",
   "version": "1.0.0",
-  "description": "Meet word count goals with pandoc, markdown, and node",
+  "description": "Meet word count goals with markdown and node",
   "main": "index.js",
   "scripts": {
     "build": "webpack"
@@ -19,6 +19,9 @@
   "dependencies": {
     "chalk": "^4.1.2",
     "jsdom": "^26.1.0",
+    "remark-html": "^16.0.1",
+    "remark-parse": "^11.0.0",
+    "unified": "^11.0.5",
     "yargs": "^17.7.2"
   },
   "devDependencies": {
