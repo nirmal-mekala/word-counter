@@ -16,7 +16,7 @@ const readline = require('readline');
   global.unified = unified;
   main();
 })().catch((e) => {
-  console.error(chalk.red('Error importing modules:', e));
+  console.error(e);
   process.exit(1);
 });
 
