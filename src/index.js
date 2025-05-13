@@ -2,81 +2,93 @@
 const jsdom = require('jsdom');
 const { JSDOM } = jsdom;
 const child_process = require('child_process');
+const spawn = child_process.spawn;
 const chalk = require('chalk');
 const yargs = require('yargs');
 const { hideBin } = require('yargs/helpers');
 const fs = require('fs');
 const readline = require('readline');
 
-const spawn = child_process.spawn;
+const argv = args();
+let initialWordCount;
+main();
 
-const argv = yargs(hideBin(process.argv))
-  .options({
-    words: {
-      alias: 'w',
-      describe: '# additional words needed',
-      demandOption: true,
-    },
-    path: {
-      alias: 'p',
-      describe: 'provide a path to file',
-      demandOption: true,
-    },
-  })
-  .help()
-  .parse();
+function main() {
+  parseMarkdownAndRenderOutput();
 
-console.log('argv', argv);
+  // TODO arg handling - should be able to set goal via command line
+  // TODO break out
+  // TODO error handlin
+  // --> no file
+  // --> no pandoc
 
-// TODO arg handling - should be able to set goal via command line
-// TODO break out
-// TODO error handlin
-// --> no file
-// --> no pandoc
+  fs.watchFile(argv.path, (event, filename) => {
+    parseMarkdownAndRenderOutput();
+  });
+}
 
-fs.watchFile(argv.path, (event, filename) => {
-  readline.cursorTo(process.stdout, 0, 0);
-  readline.clearScreenDown(process.stdout);
-  console.log(chalk.magenta('watchfileHook running'))
-  console.log(`argv.path ${argv.path} from watchFile hook`);
+function parseMarkdownAndRenderOutput() {
   pandoc = spawn('pandoc', ['-s', argv.path]);
-  pandoc.stdout.on('data', (data) => {
-    //  console.log(`stdout: ${data}`);
-    const dom = new JSDOM(data);
-    console.log(
-      chalk.inverse.green(dom.window.document.querySelector('p').textContent),
-    );
+  pandoc.stdout.on('data', (html) => {
+    const wordCount = countHTMLWords(html);
+    if (!initialWordCount) {
+      initialWordCount = wordCount;
+    }
+    renderOutput(wordCount, initialWordCount, argv.goal);
   });
   pandoc.stderr.on('data', (data) => {
-    //    console.log(`stderr: ${data}`);
+    console.log(`stderr: ${data}`);
+    process.exit(1);
   });
-  pandoc.on('close', (code) => {
-    //    console.log(`child process exited with code ${code}`);
-  });
-});
+}
 
-// watch.watchTree(
-//   '/Users/nirmal/ghq/github.com/nirmal-mekala/word-counter',
-//   function (f, curr, prev) {
-//     if (typeof f == 'object' && prev === null && curr === null) {
-//       console.log('finished walking the tree');
-//       // Finished walking the tree
-//     } else if (prev === null) {
-//       console.log('File ' + f + ' was created');
-//       // f is a new file
-//     } else if (curr.nlink === 0) {
-//       console.log('File ' + f + ' was removed');
-//       // f was removed } else {
-//       console.log('File ' + f + ' was changed');
-//       // f was changed
-//     }
-//   },
-// );
+function args() {
+  return yargs(hideBin(process.argv))
+    .options({
+      goal: {
+        alias: 'g',
+        describe: '# additional words needed',
+        demandOption: true,
+      },
+      path: {
+        alias: 'p',
+        describe: 'provide a path to file',
+        demandOption: true,
+      },
+    })
+    .help()
+    .parse();
+}
 
-// const dom = new JSDOM(`<!DOCTYPE html><p>Hello world</p>`);
-// console.log(dom.window.document.querySelector('p').textContent); // "Hello world"
-//
-//
-//
+function renderOutput(wordCount, originalWordCount, goal) {
+  readline.cursorTo(process.stdout, 0, 0);
+  readline.clearScreenDown(process.stdout);
+  const pastGoal = wordCount - originalWordCount >= goal;
+  const color = pastGoal ? chalk.green : chalk.red;
+  const message = pastGoal
+    ? chalk.green.inverse('GOAL MET')
+    : chalk.red.inverse('KEEP WRITING');
+  console.log(`
 
-// console.log(Array.from(document.querySelectorAll('li')).map(node => node.textContent).join("-----"))
+  Word Count: ${color(wordCount)}
+  Goal:       ${originalWordCount + goal}
+  
+  ${message}
+
+  `);
+}
+
+function countHTMLWords(html) {
+  const dom = new JSDOM(html);
+  const textContent = Array.from(dom.window.document.querySelectorAll('p'))
+    .map((node) => node.textContent)
+    .join(' ');
+  return countWords(textContent);
+}
+
+function countWords(str) {
+  // Match all runs of word characters (letters, digits, underscores)
+  const matches = str.match(/\b\w+\b/g);
+  // If there are no matches, return 0; otherwise return the count
+  return matches ? matches.length : 0;
+}
