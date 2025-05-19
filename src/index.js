@@ -98,18 +98,17 @@ function output(wordCount, originalWordCount, goal) {
   readline.cursorTo(process.stdout, 0, 0);
   readline.clearScreenDown(process.stdout);
   const pastGoal = wordCount - originalWordCount >= goal;
-  const wordCountString = pastGoal
-    ? chalk.green(wordCount)
-    : chalk.red(wordCount);
-  const message = pastGoal
-    ? chalk.green.inverse('GOAL MET')
-    : chalk.red.inverse('KEEP WRITING');
+  const color = pastGoal ? chalk.green : chalk.red;
+  const message = pastGoal ? 'GOAL MET' : 'KEEP WRITING';
+  const remaining = pastGoal ? 0 : goal - (wordCount - originalWordCount);
+
   console.log(`
 
-  Word Count: ${wordCountString}
+  Word Count: ${color(wordCount)}
+  Remaining:  ${remaining}
   Goal:       ${originalWordCount + goal}
   
-  ${message}
+  ${color.inverse(message)}
 
   `);
 }
