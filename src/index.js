@@ -81,7 +81,25 @@ function toHtml(markdown) {
 
 function countHTMLWords(html) {
   const dom = new JSDOM(html);
-  const textContent = Array.from(dom.window.document.querySelectorAll('p'))
+  const elements = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'ul', 'ol'];
+
+  const textContent = elements
+    .map((el) =>
+      Array.from(dom.window.document.querySelectorAll(el)).filter((node) => {
+        if (['OL', 'UL'].includes(node.tagName)) {
+          let parent = node.parentElement;
+          while (parent) {
+            if (['OL', 'UL', 'LI'].includes(parent.tagName)) {
+              return false;
+            }
+            parent = parent.parentElement;
+          }
+          return true;
+        }
+        return true;
+      }),
+    )
+    .flat()
     .map((node) => node.textContent)
     .join(' ');
   return countWords(textContent);

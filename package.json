@@ -4,6 +4,7 @@
   "description": "Meet word count goals with markdown and node",
   "main": "index.js",
   "scripts": {
+    "dev": "node src/index.js",
     "build": "webpack"
   },
   "repository": {
