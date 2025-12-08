@@ -35,7 +35,7 @@ function parseArgv() {
       goal: {
         alias: 'g',
         describe: '# additional words needed',
-        demandOption: true,
+        demandOption: false,
         type: 'number',
       },
       path: {
@@ -115,18 +115,35 @@ function countWords(str) {
 function output(wordCount, originalWordCount, goal) {
   readline.cursorTo(process.stdout, 0, 0);
   readline.clearScreenDown(process.stdout);
-  const pastGoal = wordCount - originalWordCount >= goal;
-  const color = pastGoal ? chalk.green : chalk.red;
-  const message = pastGoal ? 'GOAL MET' : 'KEEP WRITING';
-  const remaining = pastGoal ? 0 : goal - (wordCount - originalWordCount);
 
-  console.log(`
+  let pastGoal
+  let color
+  let message
+  let remaining
 
-  Word Count: ${color(wordCount)}
-  Remaining:  ${remaining}
-  Goal:       ${originalWordCount + goal}
-  
-  ${color.inverse(message)}
+  if (goal !== undefined) {
+    pastGoal = wordCount - originalWordCount >= goal;
+    color = pastGoal ? chalk.green : chalk.red;
+    message = pastGoal ? 'GOAL MET' : 'KEEP WRITING';
+    remaining = pastGoal ? 0 : goal - (wordCount - originalWordCount);
+  } else {
+    color = chalk.blue
+  }
 
-  `);
+  const WORD_COUNT_STRING = 'Word Count:'
+  const REMAINING_STRING = 'Remaining:'
+  const GOAL_STRING = 'Goal:'
+  const PREFIX = '  '
+
+  const renderWithSpaces = (stringToRender) => {
+    const longestString = WORD_COUNT_STRING
+    return PREFIX + stringToRender + ' '.repeat(longestString.length - stringToRender.length + 1)
+  }
+
+  console.log()
+  console.log(`${renderWithSpaces(WORD_COUNT_STRING)}${color(wordCount)}`)
+  if (typeof remaining === 'number') console.log(`${renderWithSpaces(REMAINING_STRING)}${remaining}`)
+  if (typeof goal === 'number') console.log(`${renderWithSpaces(GOAL_STRING)}${goal}`)
+  console.log()
+  if (message) console.log(PREFIX + color.inverse(message))
 }
