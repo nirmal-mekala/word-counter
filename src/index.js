@@ -120,8 +120,11 @@ function output(wordCount, originalWordCount, goal) {
   let color
   let message
   let remaining
+  const sessionWordCount = wordCount - originalWordCount > 0 ? wordCount - originalWordCount : 0
 
-  if (goal !== undefined) {
+  const goalMode = goal !== undefined
+
+  if (goalMode) {
     pastGoal = wordCount - originalWordCount >= goal;
     color = pastGoal ? chalk.green : chalk.red;
     message = pastGoal ? 'GOAL MET' : 'KEEP WRITING';
@@ -130,20 +133,58 @@ function output(wordCount, originalWordCount, goal) {
     color = chalk.blue
   }
 
-  const WORD_COUNT_STRING = 'Word Count:'
-  const REMAINING_STRING = 'Remaining:'
+  const WORD_COUNT_STRING = 'Total Word Count:'
+  const SESSION_WORD_COUNT_STRING = 'Session Word Count:'
   const GOAL_STRING = 'Goal:'
+  const REMAINING_STRING = 'Remaining:'
   const PREFIX = '  '
 
-  const renderWithSpaces = (stringToRender) => {
-    const longestString = WORD_COUNT_STRING
-    return PREFIX + stringToRender + ' '.repeat(longestString.length - stringToRender.length + 1)
+  /*
+   * TODO: improve render function - should handle columns better,
+   * have more spacing, right align numbers, and format numbers
+   */
+  const render = (columnOneString, columnTwoString) => {
+    if (columnOneString === undefined && columnTwoString === undefined) {
+      console.log()
+      return
+    }
+
+    const secure = (unsafeString) => {
+      return unsafeString === undefined ? '' : String(unsafeString)
+    }
+
+    const safeColumnOneString = secure(columnOneString)
+    const safeColumnTwoString = secure(columnTwoString)
+
+    const pad = (stringToRender) => {
+      let longestStringLength = 0
+      for (const str of [WORD_COUNT_STRING, REMAINING_STRING, GOAL_STRING, SESSION_WORD_COUNT_STRING]) {
+        if (str.length > longestStringLength) {
+          longestStringLength = str.length
+        }
+      }
+      /*
+       * TODO - refactor. this is a quick and dirty patch for when chalk strings throw off
+       * the string calculation. chalk needs to be applied post string math
+       */
+      const ensurePositive = (num) => {
+        return num >= 0 ? num : 0
+      }
+
+      return PREFIX + stringToRender + ' '.repeat(ensurePositive(longestStringLength - stringToRender.length + 1))
+    }
+
+    console.log(pad(safeColumnOneString) + safeColumnTwoString)
   }
 
-  console.log()
-  console.log(`${renderWithSpaces(WORD_COUNT_STRING)}${color(wordCount)}`)
-  if (typeof remaining === 'number') console.log(`${renderWithSpaces(REMAINING_STRING)}${remaining}`)
-  if (typeof goal === 'number') console.log(`${renderWithSpaces(GOAL_STRING)}${goal}`)
-  console.log()
-  if (message) console.log(PREFIX + color.inverse(message))
+
+  render()
+  render(WORD_COUNT_STRING, color(wordCount))
+  render(SESSION_WORD_COUNT_STRING, sessionWordCount)
+  if (goalMode) {
+    render(REMAINING_STRING, remaining)
+    render(GOAL_STRING, goal)
+    render()
+    render(color.inverse(message))
+  }
 }
