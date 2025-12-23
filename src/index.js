@@ -132,16 +132,16 @@ function output(wordCount, originalWordCount, goal) {
     color = chalk.blue
   }
 
-  const WORD_COUNT_STRING = 'Total Word Count:'
-  const SESSION_WORD_COUNT_STRING = 'Session Word Count:'
+  const TOTAL_STRING = 'Total:'
+  const SESSION_TOTAL_STRING = 'Session:'
   const GOAL_STRING = 'Goal:'
   const REMAINING_STRING = 'Remaining:'
 
 
   let textContent = []
   textContent.push(undefined)
-  textContent.push([{ text: WORD_COUNT_STRING }, { text: formatNum(wordCount), color }])
-  textContent.push([{ text: SESSION_WORD_COUNT_STRING }, { text: formatNum(sessionWordCount) }])
+  textContent.push([{ text: TOTAL_STRING }, { text: formatNum(wordCount), color }])
+  textContent.push([{ text: SESSION_TOTAL_STRING }, { text: formatNum(sessionWordCount) }])
   if (goalMode) {
     textContent.push([{ text: REMAINING_STRING }, { text: formatNum(remaining) }])
     textContent.push([{ text: GOAL_STRING }, { text: formatNum(goal) }])
