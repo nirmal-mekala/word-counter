@@ -1,5 +1,4 @@
 const { JSDOM } = require('jsdom');
-const { spawn, exec } = require('child_process');
 const chalk = require('chalk');
 const yargs = require('yargs');
 const { hideBin } = require('yargs/helpers');
@@ -7,10 +6,9 @@ const fs = require('fs');
 const readline = require('readline');
 
 (async () => {
-  const [{ default: remarkParse }, { default: remarkHtml }] = await Promise.all(
-    [import('remark-parse'), import('remark-html')],
+  const [{ default: remarkParse }, { default: remarkHtml }, { unified }] = await Promise.all(
+    [import('remark-parse'), import('remark-html'), import('unified')],
   );
-  const { unified } = await import('unified');
   global.remarkParse = remarkParse;
   global.remarkHtml = remarkHtml;
   global.unified = unified;
@@ -130,6 +128,7 @@ function output(wordCount, originalWordCount, goal) {
     message = pastGoal ? 'GOAL MET' : 'KEEP WRITING';
     remaining = pastGoal ? 0 : goal - (wordCount - originalWordCount);
   } else {
+    message = 'WRITE!'
     color = chalk.blue
   }
 
@@ -137,54 +136,70 @@ function output(wordCount, originalWordCount, goal) {
   const SESSION_WORD_COUNT_STRING = 'Session Word Count:'
   const GOAL_STRING = 'Goal:'
   const REMAINING_STRING = 'Remaining:'
-  const PREFIX = '  '
-
-  /*
-   * TODO: improve render function - should handle columns better,
-   * have more spacing, right align numbers, and format numbers
-   */
-  const render = (columnOneString, columnTwoString) => {
-    if (columnOneString === undefined && columnTwoString === undefined) {
-      console.log()
-      return
-    }
-
-    const secure = (unsafeString) => {
-      return unsafeString === undefined ? '' : String(unsafeString)
-    }
-
-    const safeColumnOneString = secure(columnOneString)
-    const safeColumnTwoString = secure(columnTwoString)
-
-    const pad = (stringToRender) => {
-      let longestStringLength = 0
-      for (const str of [WORD_COUNT_STRING, REMAINING_STRING, GOAL_STRING, SESSION_WORD_COUNT_STRING]) {
-        if (str.length > longestStringLength) {
-          longestStringLength = str.length
-        }
-      }
-      /*
-       * TODO - refactor. this is a quick and dirty patch for when chalk strings throw off
-       * the string calculation. chalk needs to be applied post string math
-       */
-      const ensurePositive = (num) => {
-        return num >= 0 ? num : 0
-      }
-
-      return PREFIX + stringToRender + ' '.repeat(ensurePositive(longestStringLength - stringToRender.length + 1))
-    }
-
-    console.log(pad(safeColumnOneString) + safeColumnTwoString)
-  }
 
 
-  render()
-  render(WORD_COUNT_STRING, color(wordCount))
-  render(SESSION_WORD_COUNT_STRING, sessionWordCount)
+  let textContent = []
+  textContent.push(undefined)
+  textContent.push([{ text: WORD_COUNT_STRING }, { text: formatNum(wordCount), color }])
+  textContent.push([{ text: SESSION_WORD_COUNT_STRING }, { text: formatNum(sessionWordCount) }])
   if (goalMode) {
-    render(REMAINING_STRING, remaining)
-    render(GOAL_STRING, goal)
-    render()
-    render(color.inverse(message))
+    textContent.push([{ text: REMAINING_STRING }, { text: formatNum(remaining) }])
+    textContent.push([{ text: GOAL_STRING }, { text: formatNum(goal) }])
   }
+  textContent.push(undefined)
+  textContent.push([{ text: message, color: color.inverse }])
+
+
+  print(textContent)
 }
+
+
+// content in should be: Array<Array<{text: string, color?: (v: string): string } | undefined> | undefined>
+const print = (content) => {
+
+  const helpers = {
+    maxTotalLength(textContent) {
+      const longestWords = [0, 0]
+      textContent.forEach((line) => {
+        if (Array.isArray(line)) {
+          line.forEach((entry, i) => {
+            if (entry && entry.text.length > longestWords[i]) {
+              longestWords[i] = entry.text.length
+            }
+          })
+        }
+      })
+      return longestWords.reduce((acc, curr) => acc + curr, 0)
+    },
+    space() {
+      return ' '
+    },
+    padding() {
+      return helpers.space().repeat(2)
+    },
+    toFormattedEntryString(entry) {
+      if (!entry) {
+        return ''
+      }
+      const format = entry?.color ?? ((v) => v)
+      return format(entry?.text)
+    },
+    dynamicSpacing(maxTotalLength, line) {
+      return helpers.space().repeat(maxTotalLength - line[0]?.text.length - line[1]?.text.length)
+    }
+  }
+
+  content.forEach((line) => {
+    if (!Array.isArray(line)) {
+      console.log()
+    } else {
+      const [columnOneString, columnTwoString] = line.map(helpers.toFormattedEntryString)
+      const maxTotalLength = helpers.maxTotalLength(content)
+      const dynamicSpacing = helpers.dynamicSpacing(maxTotalLength, line)
+      const lineString = [helpers.padding(), columnOneString, dynamicSpacing, helpers.padding(), columnTwoString].join('')
+      console.log(lineString)
+    }
+  })
+}
+
+const formatNum = new Intl.NumberFormat('en-us').format
