@@ -137,7 +137,6 @@ function output(wordCount, originalWordCount, goal) {
   const GOAL_STRING = 'Goal:'
   const REMAINING_STRING = 'Remaining:'
 
-
   let textContent = []
   textContent.push(undefined)
   textContent.push([{ text: TOTAL_STRING }, { text: formatNum(wordCount), color }])
@@ -156,6 +155,7 @@ function output(wordCount, originalWordCount, goal) {
 
 // content in should be: Array<Array<{text: string, color?: (v: string): string } | undefined> | undefined>
 const print = (content) => {
+
 
   const helpers = {
     maxTotalLength(textContent) {
@@ -177,6 +177,9 @@ const print = (content) => {
     padding() {
       return helpers.space().repeat(2)
     },
+    wordCounterString() {
+      return '.✧:* Word Counter ✧:*.'
+    },
     toFormattedEntryString(entry) {
       if (!entry) {
         return ''
@@ -186,9 +189,15 @@ const print = (content) => {
     },
     dynamicSpacing(maxTotalLength, line) {
       return helpers.space().repeat(maxTotalLength - line[0]?.text.length - line[1]?.text.length)
+    },
+    splashMessage() {
+      return chalk.magenta([helpers.padding(), helpers.wordCounterString()].join(""))
     }
   }
 
+
+  console.log()
+  console.log(helpers.splashMessage())
   content.forEach((line) => {
     if (!Array.isArray(line)) {
       console.log()
