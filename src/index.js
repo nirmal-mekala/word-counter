@@ -132,10 +132,10 @@ function output(wordCount, originalWordCount, goal) {
     color = chalk.blue
   }
 
-  const TOTAL_STRING = 'Total:'
-  const SESSION_TOTAL_STRING = 'Session:'
-  const GOAL_STRING = 'Goal:'
-  const REMAINING_STRING = 'Remaining:'
+  const TOTAL_STRING = 'total:'
+  const SESSION_TOTAL_STRING = 'session:'
+  const GOAL_STRING = 'goal:'
+  const REMAINING_STRING = 'remaining:'
 
   let textContent = []
   textContent.push(undefined)
@@ -178,7 +178,7 @@ const print = (content) => {
       return helpers.space().repeat(2)
     },
     wordCounterString() {
-      return '.✧:* Word Counter ✧:*.'
+      return '.✧:* word counter ✧:*.'
     },
     toFormattedEntryString(entry) {
       if (!entry) {
@@ -191,7 +191,7 @@ const print = (content) => {
       return helpers.space().repeat(maxTotalLength - line[0]?.text.length - line[1]?.text.length)
     },
     splashMessage() {
-      return chalk.magenta([helpers.padding(), helpers.wordCounterString()].join(""))
+      return chalk.blue([helpers.padding(), helpers.wordCounterString()].join(""))
     }
   }
 
