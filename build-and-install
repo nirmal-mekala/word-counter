@@ -13,7 +13,7 @@ USER_PATH="$( cd ~ && pwd )"
 USER_BIN_PATH="$USER_PATH/bin"
 
 echo "Building…"
-npx webpack
+pnpm exec webpack
 
 echo "Installing to $USER_BIN_PATH"
 

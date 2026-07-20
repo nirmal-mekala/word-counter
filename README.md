@@ -13,7 +13,7 @@ word-counter --path ./path/to/markdown.md --goal 100
 Make sure you install dependencies
 
 ```
-npm install
+pnpm install
 ```
 
 Then…
@@ -21,4 +21,3 @@ Then…
 ```
 ./build-and-install
 ```
-

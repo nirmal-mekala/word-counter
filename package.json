@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Meet word count goals with markdown and node",
   "main": "index.js",
+  "packageManager": "pnpm@10.33.2",
   "scripts": {
     "dev": "node src/index.js",
     "test": "node --test",
