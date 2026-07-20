@@ -5,18 +5,23 @@ const { hideBin } = require('yargs/helpers');
 const fs = require('fs');
 const readline = require('readline');
 
-(async () => {
+async function loadMarkdownParser() {
   const [{ default: remarkParse }, { default: remarkHtml }, { unified }] = await Promise.all(
     [import('remark-parse'), import('remark-html'), import('unified')],
   );
   global.remarkParse = remarkParse;
   global.remarkHtml = remarkHtml;
   global.unified = unified;
-  main();
-})().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+}
+
+if (require.main === module) {
+  loadMarkdownParser()
+    .then(() => main())
+    .catch((e) => {
+      console.error(e);
+      process.exit(1);
+    });
+}
 
 function main() {
   const argv = parseArgv();
@@ -63,7 +68,7 @@ function parseMarkdownAndRenderOutput(state, argv) {
 
 function countHtmlAndUpdateState(html, state) {
   state.wordCount = countHTMLWords(html);
-  if (!state.initialWordCount) {
+  if (state.initialWordCount === null) {
     state.initialWordCount = state.wordCount;
   }
 }
@@ -212,3 +217,11 @@ const print = (content) => {
 }
 
 const formatNum = new Intl.NumberFormat('en-us').format
+
+module.exports = {
+  countHTMLWords,
+  countHtmlAndUpdateState,
+  countWords,
+  loadMarkdownParser,
+  toHtml,
+};
