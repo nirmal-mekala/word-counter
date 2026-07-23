@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "node src/index.js",
     "test": "node --test",
-    "build": "webpack"
+    "build": "./build"
   },
   "repository": {
     "type": "git",

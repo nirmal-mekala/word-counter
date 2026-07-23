@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+echo "Building…"
+pnpm exec webpack
+
+
+echo "Adding hashbang and writing to dist/word-counter"
+(echo "#!/usr/bin/env node"; cat ./dist/bundle.js) > tmp
+chmod u+x tmp
+mv tmp ./dist/word-counter
