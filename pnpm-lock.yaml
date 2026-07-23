@@ -23,6 +23,9 @@ importers:
       unified:
         specifier: ^11.0.5
         version: 11.0.5
+      webpack:
+        specifier: ^5.108.4
+        version: 5.108.4(webpack-cli@6.0.1)
       yargs:
         specifier: ^17.7.2
         version: 17.7.3
